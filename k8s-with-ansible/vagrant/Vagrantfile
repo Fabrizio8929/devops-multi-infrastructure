@@ -1,0 +1,52 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  # Usiamo una base Ubuntu 22.04 LTS pulita
+  config.vm.box = "ubuntu/jammy64"
+
+# Diciamo a Vagrant di aspettare fino a 10 minuti (600 secondi) se la VM è lenta a partire
+  config.vm.boot_timeout = 600
+
+# DISABILITA LA CONDIVISIONE AUTOMATICA (Blocca l'errore di WSL)
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+# Forza l'uso del client SSH nativo di WSL/Linux
+  config.ssh.insert_key = true
+
+  # --- CONFIGURAZIONE MASTER ---
+  config.vm.define "master" do |master|
+    master.vm.hostname = "k8s-m"
+    master.vm.network "private_network", ip: "192.168.56.10"
+    
+    master.vm.provider "virtualbox" do |v|
+      v.name = "k8s-m"
+      v.memory = 2048  # 2 GB di RAM
+      v.cpus = 2       # 2 vCPU
+    end
+  end
+
+  # --- CONFIGURAZIONE WORKER 1 ---
+  config.vm.define "worker1" do |worker1|
+    worker1.vm.hostname = "k8s-w1"
+    worker1.vm.network "private_network", ip: "192.168.56.11"
+    
+    worker1.vm.provider "virtualbox" do |v|
+      v.name = "k8s-w1"
+      v.memory = 1024  # 1 GB di RAM
+      v.cpus = 1       # 1 vCPU
+    end
+  end
+
+  # --- CONFIGURAZIONE WORKER 2 ---
+  config.vm.define "worker2" do |worker2|
+    worker2.vm.hostname = "k8s-w2"
+    worker2.vm.network "private_network", ip: "192.168.56.12"
+    
+    worker2.vm.provider "virtualbox" do |v|
+      v.name = "k8s-w2"
+      v.memory = 1024  # 1 GB di RAM
+      v.cpus = 1       # 1 vCPU
+    end
+  end
+end
