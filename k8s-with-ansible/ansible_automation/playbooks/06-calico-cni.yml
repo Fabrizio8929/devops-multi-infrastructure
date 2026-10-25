@@ -1,0 +1,34 @@
+---
+- name: Install Calico CNI Network Plugin
+  hosts: control_plane
+  become: yes
+  tasks:
+    - name: Download Tigera Operator manifest
+      get_url:
+        url: https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/tigera-operator.yaml
+        dest: /tmp/tigera-operator.yaml
+
+    - name: Apply Tigera Operator
+      command: kubectl create -f /tmp/tigera-operator.yaml
+      register: tigera_result
+      failed_when: 
+        - tigera_result.rc != 0
+        - "'AlreadyExists' not in tigera_result.stderr"
+
+    - name: Download Calico Custom Resources manifest
+      get_url:
+        url: https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/custom-resources.yaml
+        dest: /tmp/custom-resources.yaml
+
+    - name: Ensure correct Pod Network CIDR in Calico custom resources
+      replace:
+        path: /tmp/custom-resources.yaml
+        regexp: 'cidr: 192\.168\.0\.0/16'
+        replace: 'cidr: 10.244.0.0/16'
+
+    - name: Apply Calico Custom Resources
+      command: kubectl create -f /tmp/custom-resources.yaml
+      register: calico_cr_result
+      failed_when: 
+        - calico_cr_result.rc != 0
+        - "'AlreadyExists' not in calico_cr_result.stderr"
