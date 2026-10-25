@@ -1,0 +1,39 @@
+---
+- name: Initialize Kubernetes Master Node
+  hosts: control_plane
+  become: yes
+  tasks:
+    - name: Initialize the cluster with kubeadm
+      command: kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address=192.168.56.10
+      args:
+        creates: /etc/kubernetes/admin.conf
+
+    - name: Create .kube directory for root user
+      file:
+        path: /root/.kube
+        state: directory
+        mode: '0755'
+
+    - name: Copy admin.conf to root's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /root/.kube/config
+        remote_src: yes
+        owner: "{{ ansible_user_uid }}"
+        group: "{{ ansible_user_gid }}"
+
+    - name: Create .kube directory for regular user (ubuntu/vagrant)
+      file:
+        path: "/home/{{ ansible_ssh_user }}/.kube"
+        state: directory
+        mode: '0755'
+      when: ansible_ssh_user is defined
+
+    - name: Copy admin.conf to regular user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: "/home/{{ ansible_ssh_user }}/.kube/config"
+        remote_src: yes
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+      when: ansible_ssh_user is defined
