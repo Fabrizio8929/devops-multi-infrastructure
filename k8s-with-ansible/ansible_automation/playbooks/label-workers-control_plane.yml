@@ -1,0 +1,19 @@
+- name: Apply roles to cluster nodes
+  hosts: master
+  become: yes
+  tasks:
+    - name: Apply worker role label to worker nodes
+      shell: |
+        kubectl label node {{ item }} node-role.kubernetes.io/worker=worker --overwrite
+      loop:
+        - k8s-w1
+        - k8s-w2
+
+    # Se un domani aggiungi altri control plane (es. in alta affidabilità), 
+    # ti basterà decommentare questo blocco e aggiungere i nomi dei nuovi master in lista:
+    # - name: Apply control-plane role label to additional master nodes
+    #   shell: |
+    #     kubectl label node {{ item }} node-role.kubernetes.io/control-plane=control-plane --overwrite
+    #   loop:
+    #     - k8s-m2
+    #     # - k8s-m3
