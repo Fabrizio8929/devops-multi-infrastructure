@@ -14,6 +14,12 @@ Vagrant.configure("2") do |config|
 # Forza l'uso del client SSH nativo di WSL/Linux
   config.ssh.insert_key = true
 
+# --- OROLOGIO E TIMEZONE (Unica aggiunta pulita) ---
+  config.vm.provision "shell", inline: <<-SHELL
+    sudo timedatectl set-timezone Europe/Rome
+    sudo timedatectl set-ntp on
+  SHELL
+
   # --- CONFIGURAZIONE MASTER ---
   config.vm.define "master" do |master|
     master.vm.hostname = "k8s-m"
