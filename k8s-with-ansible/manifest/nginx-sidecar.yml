@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-sidecar-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-sidecar
+  template:
+    metadata:
+      labels:
+        app: nginx-sidecar
+    spec:
+      containers:
+      # 1. IL CONTAINER PRINCIPALE (Nginx)
+      - name: nginx-container
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: shared-logs
+          mountPath: /var/log/nginx
+
+      # 2. IL CONTAINER SIDECAR (Legge i log in tempo reale)
+      - name: log-sidecar
+        image: busybox:latest
+        command: ["sh", "-c", "tail -f /var/log/nginx/access.log"]
+        volumeMounts:
+        - name: shared-logs
+          mountPath: /var/log/nginx
+
+      # VOLUME CONDIVISO NEL POD
+      volumes:
+      - name: shared-logs
+        emptyDir: {}
